@@ -19,4 +19,4 @@ GitHub Pages serves `index.html` and `app.enc.json` from the `main` branch root.
 
 ## Status
 
-Prototype v0.4, September 2026. Data seeded from public documents (CNPN opinions, ESCo, court rulings, press) and team notes. Figures marked « à vérifier » are not yet sourced.
+Prototype maintained by Biutopic for the LVC team, September 2026. Data seeded from public documents (CNPN opinions, ESCo, court rulings, press) and team notes. Figures marked « à vérifier » are not yet sourced.
