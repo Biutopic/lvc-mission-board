@@ -3,7 +3,8 @@
 // Output: app.enc.json  { v, salt, iv, ct }  — AES-256-GCM, key from PBKDF2-SHA256 (300k iterations).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { webcrypto } from 'node:crypto';
-const { subtle, getRandomValues } = webcrypto;
+const subtle = webcrypto.subtle;
+const getRandomValues = (u8) => webcrypto.getRandomValues(u8);
 
 const [,, src, password] = process.argv;
 if (!src || !password) { console.error('usage: node build.mjs <plaintext.html> <password>'); process.exit(2); }
