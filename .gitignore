@@ -1,0 +1,6 @@
+# never commit the readable board
+*.html.plain
+lvc-mission-board.html
+parts/
+node_modules/
+.DS_Store

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>LVC Mission Board</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Inter+Tight:wght@400;500&display=swap">
+<style>
+  :root{color-scheme:light}
+  html,body{height:100%;margin:0}
+  body{font-family:"Inter Tight",system-ui,sans-serif;background:#fff;color:#141618;display:grid;place-items:center;padding:24px}
+  .gate{width:min(420px,100%);display:flex;flex-direction:column;gap:18px}
+  .mk{width:44px;height:44px;border-radius:50%;background:#141618;color:#fff;display:grid;place-items:center;font-family:"Archivo",sans-serif;font-weight:800;font-size:14px;letter-spacing:.04em}
+  h1{font-family:"Archivo",sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;margin:0;line-height:1.05}
+  p{margin:0;color:#4a4f55;font-size:14.5px;line-height:1.45}
+  form{display:flex;gap:8px}
+  input{flex:1;font:inherit;font-size:16px;padding:11px 13px;border:1px solid #cfceC6;border-radius:10px;background:#f6f6f3;color:#141618}
+  input:focus{outline:2px solid #e0301e;outline-offset:2px}
+  button{font-family:"Archivo",sans-serif;font-weight:800;font-size:14px;letter-spacing:.02em;padding:11px 16px;border:0;border-radius:10px;background:#e0301e;color:#fff;cursor:pointer}
+  button:disabled{opacity:.6;cursor:wait}
+  .err{color:#e0301e;font-size:13px;min-height:1.2em}
+  .fine{font-size:12px;color:#8a8f95}
+  iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="gate" id="gate">
+  <span class="mk">LVC</span>
+  <div><h1>Mission Board</h1><p>Les Vents de la Colère · Sea Shepherd France. Accès réservé à l'équipe de campagne.</p></div>
+  <form id="f" autocomplete="off">
+    <input id="pw" type="password" placeholder="Mot de passe" aria-label="Mot de passe" autofocus required>
+    <button id="go" type="submit">Entrer</button>
+  </form>
+  <div class="err" id="err" role="alert"></div>
+  <p class="fine">Le contenu est chiffré dans ce dépôt public et déchiffré dans votre navigateur. Rien n'est envoyé à un serveur.</p>
+</main>
+<iframe id="app" hidden title="LVC Mission Board"></iframe>
+<script>
+(async function(){
+  var gate=document.getElementById('gate'),app=document.getElementById('app'),err=document.getElementById('err'),pw=document.getElementById('pw'),go=document.getElementById('go');
+  var b64=function(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;};
+  var bundle=null;
+  async function load(){if(bundle)return bundle;var r=await fetch('app.enc.json',{cache:'no-store'});if(!r.ok)throw new Error('bundle');bundle=await r.json();return bundle;}
+  async function open(password){
+    var b=await load();var enc=new TextEncoder();
+    var base=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);
+    var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(b.salt),iterations:300000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+    var plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(b.iv)},key,b64(b.ct));
+    var html=new TextDecoder().decode(plain);
+    app.srcdoc='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0">'+html+'</body></html>';
+    app.hidden=false;gate.hidden=true;
+  }
+  document.getElementById('f').addEventListener('submit',async function(e){e.preventDefault();err.textContent='';go.disabled=true;go.textContent='…';
+    try{await open(pw.value);try{sessionStorage.setItem('lvc-pw',pw.value);}catch(x){}}
+    catch(x){err.textContent=(x&&x.message==='bundle')?'Bundle introuvable. Le site est-il bien déployé ?':'Mot de passe incorrect.';pw.select();}
+    go.disabled=false;go.textContent='Entrer';});
+  try{var saved=sessionStorage.getItem('lvc-pw');if(saved){pw.value=saved;await open(saved);}}catch(x){}
+})();
+</script>
+</body>
+</html>
