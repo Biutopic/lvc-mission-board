@@ -51,6 +51,7 @@
       if(page==='lvc'&&view){app.addEventListener('load',function once(){app.removeEventListener('load',once);try{app.contentWindow.postMessage({view:view},'*');}catch(x){}});}}
     else if(page==='lvc'&&view){try{app.contentWindow.postMessage({view:view},'*');}catch(x){}}}
   window.addEventListener('message',function(ev){var d=ev.data||{};if(d.go==='lvc'){location.hash='lvc'+(d.view?':'+d.view:'');}else if(d.go==='hub'){location.hash='hub';}});
+  app.addEventListener('load',function(){try{app.contentWindow.postMessage({gate:true},'*');}catch(x){}});
   window.addEventListener('hashchange',route);
   async function open(password){
     var b=await load();var enc=new TextEncoder();
