@@ -1,4 +1,4 @@
-# LVC Mission Board
+# Mission Control · Sea Shepherd France
 
 Prototype of a campaign mission board for **Les Vents de la Colère** (Sea Shepherd France): agenda radar, decisions queue, task board by person, free-time recommender, strategy canvas, project chart with real coastlines, people circle and document hub. Static, no backend. State lives in the browser.
 
@@ -19,4 +19,4 @@ GitHub Pages serves `index.html` and `app.enc.json` from the `main` branch root.
 
 ## Status
 
-Prototype maintained by Little Shepherd for the LVC team, September 2026. Data seeded from public documents (CNPN opinions, ESCo, court rulings, press) and team notes. Figures marked « à vérifier » are not yet sourced.
+The site opens on the Mission Control hub (campaign menu, Media pillar, local groups) and links to each campaign session; Les Vents de la Colère is the first. Build: `node build.mjs <password> hub=<hub.html> lvc=<board.html>`. Prototype maintained by Little Shepherd for the Sea Shepherd France team, September–October 2026. Data seeded from public documents (CNPN opinions, ESCo, court rulings, press) and team notes. Figures marked « à vérifier » are not yet sourced.
