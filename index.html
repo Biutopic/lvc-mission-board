@@ -38,6 +38,7 @@
   <div class="err" id="err" role="alert"></div>
   <p class="fine">Le contenu est chiffré dans ce dépôt public et déchiffré dans votre navigateur. Rien n'est envoyé à un serveur. Tenu par Little Shepherd pour l'équipe.</p>
 </main>
+<main class="gate" id="egate" hidden><div><h1>Espace Elven</h1><p>Mission Control personnel. Mot de passe d’Elven.</p></div><form id="ef" autocomplete="off"><input id="epw" type="password" placeholder="Mot de passe" aria-label="Mot de passe" required><button id="ego" type="submit">Entrer</button></form><div class="err" id="eerr" role="alert"></div><p class="fine"><a href="#hub" style="color:#9fb0bd">← Retour au site de l’équipe</a></p></main>
 <iframe id="app" hidden title="Mission Control"></iframe>
 <script>
 (async function(){
@@ -47,12 +48,36 @@
   async function load(){if(bundle)return bundle;var r=await fetch('app.enc.json',{cache:'no-store'});if(!r.ok)throw new Error('bundle');bundle=await r.json();return bundle;}
   var pages=null;
   function wrap(html){return '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0">'+html+'</body></html>';}
-  function route(){if(!pages)return;var h=(location.hash||'').replace('#','');var parts=h.split(':');var page=parts[0]==='lvc'?'lvc':'hub';var view=parts[1]||'';
+  function route(){if(!pages)return;var h=(location.hash||'').replace('#','');var parts=h.split(':');if(parts[0]==='elven'){openElven();return}egate.hidden=true;app.hidden=false;var page=parts[0]==='lvc'?'lvc':'hub';var view=parts[1]||'';
     if(app.dataset.page!==page){app.dataset.page=page;app.srcdoc=wrap(pages[page]);app.title=page==='lvc'?'LVC Mission Board':'Mission Control';
       if(page==='lvc'&&view){app.addEventListener('load',function once(){app.removeEventListener('load',once);try{app.contentWindow.postMessage({view:view},'*');}catch(x){}});}}
     else if(page==='lvc'&&view){try{app.contentWindow.postMessage({view:view},'*');}catch(x){}}}
-  window.addEventListener('message',function(ev){var d=ev.data||{};if(d.go==='lvc'){location.hash='lvc'+(d.view?':'+d.view:'');}else if(d.go==='hub'){location.hash='hub';}});
+  window.addEventListener('message',function(ev){var d=ev.data||{};if(d.go==='elven'){location.hash='elven';return}if(d.go==='lock'){try{sessionStorage.removeItem('mc-k')}catch(x){}location.hash='hub';return}if(d.go==='lvc'){location.hash='lvc'+(d.view?':'+d.view:'');}else if(d.go==='hub'){location.hash='hub';}});
   app.addEventListener('load',function(){try{app.contentWindow.postMessage({gate:true},'*');}catch(x){}});
+
+  /* Espace Elven: elven.key.json wraps the data key K with PBKDF2(password); page + data are AES-GCM under K. Data lives on the mc-data branch. */
+  var egate=document.getElementById('egate'),eerr=document.getElementById('eerr'),epw=document.getElementById('epw'),ego=document.getElementById('ego');
+  var hex=function(u){return Array.from(new Uint8Array(u)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')};
+  var unhex=function(h){return new Uint8Array(h.match(/../g).map(function(x){return parseInt(x,16)}))};
+  async function aesOpen(raw,o){var k=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(o.iv)},k,b64(o.ct)));}
+  async function elvenKey(password){var w=await (await fetch('elven.key.json',{cache:'no-store'})).json();
+    var base=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+    var H=await crypto.subtle.deriveBits({name:'PBKDF2',salt:unhex(w.salt),iterations:w.iter,hash:'SHA-256'},base,256);
+    return aesOpen(new Uint8Array(H),w);}
+  async function elvenData(k){var t='';try{t=localStorage.getItem('mc-gh')||''}catch(x){}
+    var r=await fetch('https://api.github.com/repos/Biutopic/lvc-mission-board/contents/elven.data.enc.json?ref=mc-data&t='+Date.now(),{cache:'no-store',headers:t?{Authorization:'Bearer '+t}:{}});
+    if(!r.ok)throw new Error('data');var j=await r.json();var o=JSON.parse(atob(j.content.replace(/\s/g,'')));
+    var txt=await aesOpen(unhex(k),o);return {sha:j.sha,data:JSON.parse(txt)};}
+  async function showElven(k){var page=await aesOpen(unhex(k),await (await fetch('elven.page.enc.json',{cache:'no-store'})).json());var D=await elvenData(k);
+    var boot=JSON.stringify({k:k,sha:D.sha,data:D.data}).replace(/</g,'\\u003c');
+    app.dataset.page='elven';app.srcdoc=wrap('<script>window.__MC='+boot+'<\/script>'+page);app.title='Mission Control · Elven';egate.hidden=true;app.hidden=false;}
+  async function openElven(){if(app.dataset.page==='elven'&&!app.hidden)return;var k=null;try{k=sessionStorage.getItem('mc-k')}catch(x){}
+    if(k){try{await showElven(k);return}catch(x){}}
+    app.hidden=true;gate.hidden=true;egate.hidden=false;eerr.textContent='';epw.value='';setTimeout(function(){epw.focus()},0);}
+  document.getElementById('ef').addEventListener('submit',async function(e){e.preventDefault();eerr.textContent='';ego.disabled=true;ego.textContent='…';
+    try{var k=await elvenKey(epw.value);try{sessionStorage.setItem('mc-k',k)}catch(x){}await showElven(k);}
+    catch(x){eerr.textContent=(x&&x.message==='data')?'Données introuvables (branche mc-data).':'Mot de passe incorrect.';epw.select();}
+    ego.disabled=false;ego.textContent='Entrer';});
   window.addEventListener('hashchange',route);
   async function open(password){
     var b=await load();var enc=new TextEncoder();
