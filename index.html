@@ -96,7 +96,12 @@
     try{await open(pw.value);try{sessionStorage.setItem('lvc-pw',pw.value);}catch(x){}}
     catch(x){err.textContent=(x&&x.message==='bundle')?'Bundle introuvable. Le site est-il bien déployé ?':'Mot de passe incorrect.';pw.select();}
     go.disabled=false;go.textContent='Entrer';});
-  try{var saved=sessionStorage.getItem('lvc-pw');if(saved){pw.value=saved;await open(saved);}}catch(x){}
+  /* magic link (2026-10-13): #join=<base64url(team password)> opens the site without typing, is remembered on this device,
+     and is removed from the address bar right away. Without the link the password page stays. */
+  try{var jm=(location.hash||'').match(/(?:^#|&)join=([A-Za-z0-9_-]+)/);
+    if(jm){var jp=decodeURIComponent(escape(atob(jm[1].replace(/-/g,'+').replace(/_/g,'/'))));history.replaceState(null,'',location.pathname+'#hub');
+      try{await open(jp);try{localStorage.setItem('lvc-pw',jp);sessionStorage.setItem('lvc-pw',jp);}catch(x){}}catch(x){err.textContent='Lien d’accès invalide ou expiré.';}}
+    else{var saved=sessionStorage.getItem('lvc-pw')||localStorage.getItem('lvc-pw');if(saved){pw.value=saved;await open(saved);}}}catch(x){}
 })();
 </script>
 </body>
