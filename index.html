@@ -111,7 +111,7 @@
     app.hidden=false;gate.hidden=true;route();
   }
   document.getElementById('f').addEventListener('submit',async function(e){e.preventDefault();err.textContent='';go.disabled=true;go.textContent='…';
-    try{await open(pw.value);try{sessionStorage.setItem('lvc-pw',pw.value);}catch(x){}}
+    try{await open(pw.value);try{sessionStorage.setItem('lvc-pw',pw.value);localStorage.setItem('lvc-pw',pw.value);}catch(x){}}
     catch(x){err.textContent=(x&&x.message==='bundle')?'Bundle introuvable. Le site est-il bien déployé ?':'Code incorrect.';if(window.__pinReset)window.__pinReset();}
     go.disabled=false;go.textContent='Entrer';});
   /* magic link (2026-10-13): #join=<base64url(team password)> opens the site without typing, is remembered on this device,
@@ -119,7 +119,8 @@
   try{var jm=(location.hash||'').match(/(?:^#|&)join=([A-Za-z0-9_-]+)/);
     if(jm){var jp=decodeURIComponent(escape(atob(jm[1].replace(/-/g,'+').replace(/_/g,'/'))));history.replaceState(null,'',location.pathname+'#hub');
       try{await open(jp);try{localStorage.setItem('lvc-pw',jp);sessionStorage.setItem('lvc-pw',jp);}catch(x){}}catch(x){err.textContent='Lien d’accès invalide ou expiré.';}}
-    else{var saved=sessionStorage.getItem('lvc-pw')||localStorage.getItem('lvc-pw');if(saved){pw.value=saved;await open(saved);}}}catch(x){}
+    else{var saved=sessionStorage.getItem('lvc-pw')||localStorage.getItem('lvc-pw');if(saved){try{await open(saved);}catch(x){/* stale remembered password (e.g. before the 1977 code): forget it, keep the keypad usable */try{sessionStorage.removeItem('lvc-pw');localStorage.removeItem('lvc-pw');}catch(y){}}}}}catch(x){}
+  pw.value='';(document.querySelectorAll('#dots i')||[]).forEach(function(d){d.classList.remove('on');});
 })();
 </script>
 </body>
