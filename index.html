@@ -49,7 +49,7 @@
   var pages=null,lvcCfg=null;
   function wrap(html){return '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0">'+html+'</body></html>';}
   function route(){if(!pages)return;var h=(location.hash||'').replace('#','');var parts=h.split(':');if(parts[0]==='elven'){openElven();return}egate.hidden=true;app.hidden=false;var page=parts[0]==='lvc'?'lvc':'hub';var view=parts[1]||'';
-    if(app.dataset.page!==page){app.dataset.page=page;app.srcdoc=wrap((page==='lvc'&&lvcCfg?'<script>window.__LVC='+lvcCfg+'<\/script>':'')+pages[page]);app.title=page==='lvc'?'LVC Mission Board':'Mission Control';
+    if(app.dataset.page!==page){app.dataset.page=page;app.srcdoc=wrap((lvcCfg?'<script>window.__LVC='+lvcCfg+'<\/script>':'')+pages[page]);app.title=page==='lvc'?'LVC Mission Board':'Mission Control';
       if(page==='lvc'&&view){app.addEventListener('load',function once(){app.removeEventListener('load',once);try{app.contentWindow.postMessage({view:view},'*');}catch(x){}});}}
     else if(page==='lvc'&&view){try{app.contentWindow.postMessage({view:view},'*');}catch(x){}}}
   window.addEventListener('message',function(ev){var d=ev.data||{};if(d.go==='elven'){location.hash='elven';return}if(d.go==='lock'){try{sessionStorage.removeItem('mc-k')}catch(x){}location.hash='hub';return}if(d.go==='lvc'){location.hash='lvc'+(d.view?':'+d.view:'');}else if(d.go==='hub'){location.hash='hub';}});
