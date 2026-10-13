@@ -33,6 +33,8 @@
   .pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;justify-content:center}
   .pad button{width:72px;height:72px;border-radius:50%;background:#152430;border:1px solid #223445;font-family:"Barlow Condensed",sans-serif;font-size:30px;font-weight:600;padding:0;color:#fff}
   .pad button:active{background:#e0301e}
+  .pad button.ok{background:#e0301e;border-color:#e0301e;font-size:34px}
+  .pad button.ok:disabled{background:#152430;border-color:#223445;color:#4b5f6e;cursor:default}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -43,7 +45,7 @@
   <form id="f" autocomplete="off" class="pinf">
     <input id="pw" type="hidden">
     <div class="dots" id="dots" aria-live="polite" aria-label="Code"><i></i><i></i><i></i><i></i></div>
-    <div class="pad" id="pad"><button type="button" data-d="1">1</button><button type="button" data-d="2">2</button><button type="button" data-d="3">3</button><button type="button" data-d="4">4</button><button type="button" data-d="5">5</button><button type="button" data-d="6">6</button><button type="button" data-d="7">7</button><button type="button" data-d="8">8</button><button type="button" data-d="9">9</button><span></span><button type="button" data-d="0">0</button><button type="button" data-x="1" aria-label="Effacer">⌫</button></div>
+    <div class="pad" id="pad"><button type="button" data-d="1">1</button><button type="button" data-d="2">2</button><button type="button" data-d="3">3</button><button type="button" data-d="4">4</button><button type="button" data-d="5">5</button><button type="button" data-d="6">6</button><button type="button" data-d="7">7</button><button type="button" data-d="8">8</button><button type="button" data-d="9">9</button><button type="button" class="ok" id="pinok" aria-label="Valider" disabled>✓</button><button type="button" data-d="0">0</button><button type="button" data-x="1" aria-label="Effacer">⌫</button></div>
     <button id="go" type="submit" hidden>Entrer</button>
   </form>
   <div class="err" id="err" role="alert"></div>
@@ -91,11 +93,12 @@
     ego.disabled=false;ego.textContent='Entrer';});
   /* keypad: 4 digits, submits by itself */
   (function(){var dots=document.querySelectorAll('#dots i'),D=document.getElementById('dots'),f=document.getElementById('f');
-    function show(){var n=pw.value.length;dots.forEach(function(d,i){d.classList.toggle('on',i<n);});}
-    function key(d){if(go.disabled)return;D.classList.remove('bad');err.textContent='';if(d==='x'){pw.value=pw.value.slice(0,-1);show();return;}if(pw.value.length>=4)return;pw.value+=d;show();if(pw.value.length===4)setTimeout(function(){f.requestSubmit?f.requestSubmit():go.click();},120);}
-    document.querySelectorAll('#pad button').forEach(function(b){b.addEventListener('click',function(){key(b.dataset.x?'x':b.dataset.d);});});
-    document.addEventListener('keydown',function(e){if(document.getElementById('gate').hidden)return;if(/^[0-9]$/.test(e.key))key(e.key);else if(e.key==='Backspace')key('x');});
-    window.__pinReset=function(){pw.value='';show();D.classList.add('bad');};})();
+    function show(){var n=pw.value.length;dots.forEach(function(d,i){d.classList.toggle('on',i<n);});document.getElementById('pinok').disabled=n<4;}
+    function key(d){if(go.disabled)return;D.classList.remove('bad');err.textContent='';if(d==='x'){pw.value=pw.value.slice(0,-1);show();return;}if(pw.value.length>=4)return;pw.value+=d;show();}
+    document.querySelectorAll('#pad button[data-d],#pad button[data-x]').forEach(function(b){b.addEventListener('click',function(){key(b.dataset.x?'x':b.dataset.d);});});
+    document.getElementById('pinok').addEventListener('click',function(){if(pw.value.length===4)f.requestSubmit?f.requestSubmit():go.click();});
+    document.addEventListener('keydown',function(e){if(document.getElementById('gate').hidden)return;if(/^[0-9]$/.test(e.key))key(e.key);else if(e.key==='Backspace')key('x');else if(e.key==='Enter'&&pw.value.length===4){e.preventDefault();f.requestSubmit?f.requestSubmit():go.click();}});
+    window.__pinReset=function(){pw.value='';show();D.classList.add('bad');};show();})();
   window.addEventListener('hashchange',route);
   async function open(password){
     var b=await load();var enc=new TextEncoder();
